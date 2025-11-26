@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  @apply antialiased;
+}
+
+body {
+  background: radial-gradient(circle at 12% 18%, rgba(255, 122, 26, 0.12), transparent 32%),
+    radial-gradient(circle at 82% 0%, rgba(244, 63, 94, 0.12), transparent 34%),
+    #fdfbf6;
+}
+
+.glass {
+  @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-soft;
+}
+
+.pill {
+  @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold border border-white/50 bg-white/70;
+}

@@ -1,15 +1,13 @@
 import { KPICard } from "@/components/KPICard";
-import { TraceProgress } from "@/components/TraceProgress";
 import { TrendChart } from "@/components/TrendChart";
-import { mockShipments, mockTrend, mockTrace, statusSteps } from "@/lib/mockData";
-import { getState } from "@/lib/utils";
+import { TrackSection } from "@/components/TrackSection";
+import { mockKpis, mockShipments, mockTrend, mockTrace } from "@/lib/mockData";
 
 export default function Page() {
-  // Static data for now; could be replaced with TanStack Query + API calls
   return (
-    <div className="page px-4 pb-12">
+    <div className="page px-4 pb-12 space-y-10">
       <Hero />
-      <TrackSection />
+      <TrackSection traceData={mockTrace} />
       <DashboardSection />
       <SupportSection />
     </div>
@@ -45,64 +43,6 @@ function Hero() {
   );
 }
 
-function TrackSection() {
-  const bag = mockTrace.bag001;
-  return (
-    <section id="track" className="card glass rounded-xl2 p-5 border mt-8">
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div>
-          <p className="eyebrow">Track & Trace</p>
-          <h2 className="text-2xl font-semibold">Zoek je zending</h2>
-          <p className="muted">Voorbeeld ID&apos;s: bag001, bag002, bag003.</p>
-        </div>
-        <span className="live-indicator"><span className="pulse" />Live</span>
-      </div>
-      <div className="glass rounded-xl2 p-4 border mb-3 flex flex-wrap items-center gap-4">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="bagInput" className="text-sm font-semibold text-muted">Zending-ID</label>
-          <input id="bagInput" name="bagId" placeholder="bijv. bag001" className="rounded-xl border px-3 py-2" defaultValue="bag001" />
-        </div>
-        <div className="flex gap-2">
-          <button className="primary-btn">Track</button>
-          <button className="ghost-btn">Genereer ID</button>
-        </div>
-      </div>
-      <div className="status-meta mb-2 flex items-center justify-between gap-3">
-        <div className="status-chip">Status: {statusSteps.find((s) => s.id === bag.currentStatus)?.label}</div>
-        <div className="meta-inline text-sm text-muted flex gap-3">
-          <span>ID: {bag.id}</span>
-          <span>Laatste update: {bag.history[bag.history.length - 1]?.time ?? "-"}</span>
-        </div>
-      </div>
-
-      <TraceProgress current={bag.currentStatus} />
-      <div className="timeline mt-4 flex flex-col gap-3">
-        {statusSteps.map((step) => {
-          const state = getState(step.id, bag.currentStatus);
-          const historyItem = bag.history.find((h) => h.status === step.id);
-          const descriptor = historyItem ? "Stap voltooid" : step.id === bag.currentStatus ? "Actieve stap" : "Nog niet bereikt";
-          return (
-            <div key={step.id} className="glass rounded-xl2 p-3 border flex gap-3 items-start">
-              <div className={`badge-icon ${state}`}>
-                <span className="pill">{step.label[0]}</span>
-              </div>
-              <div className="flex-1">
-                <header className="flex justify-between gap-2 items-start">
-                  <strong className="text-lg">{step.label}</strong>
-                  <span className={`chip ${state}`}>{descriptor}</span>
-                </header>
-                <p className="text-muted mt-1">
-                  {historyItem ? `Tijdstempel: ${historyItem.time}` : "Tijdstempel volgt zodra de stap is bereikt."}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 function DashboardSection() {
   return (
     <section id="ops" className="dashboard glass rounded-xl2 p-5 border mt-10 bg-slate-900 text-slate-100">
@@ -124,10 +64,10 @@ function DashboardSection() {
       </div>
 
       <div className="kpi-grid grid gap-3 md:grid-cols-2 lg:grid-cols-4 mt-4">
-        <KPICard title="Totaal in transit" value="5" tone="good" />
-        <KPICard title="On time" value="96.4%" tone="good" />
-        <KPICard title="Exceptions" value="24" tone="bad" hint="+4 vs gister" />
-        <KPICard title="Aankomsten" value="312" tone="warn" hint="Vandaag" />
+        <KPICard title="Gem. afhandelduur" value={`${mockKpis.avgTime}m`} tone="good" />
+        <KPICard title="On time" value={`${Math.round(mockKpis.ontime * 100)}%`} tone="good" />
+        <KPICard title="Exceptions" value={String(mockKpis.exceptions)} tone="bad" hint="+4 vs gister" />
+        <KPICard title="Aankomsten" value={String(mockKpis.arrivals)} tone="warn" hint="Vandaag" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[2fr,1fr]">

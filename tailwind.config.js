@@ -26,7 +26,7 @@ module.exports = {
         xl2: "18px"
       },
       fontFamily: {
-        sans: ['"SF Pro Display"', 'Inter', 'system-ui', 'sans-serif']
+        sans: ['"IBM Plex Sans"', 'Inter', 'system-ui', 'sans-serif']
       }
     },
   },

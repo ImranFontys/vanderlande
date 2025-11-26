@@ -67,3 +67,45 @@ export const mockShipments = [
 ];
 
 export const mockTrend = [40, 52, 48, 60, 70, 68, 82];
+
+export const mockKpiTrends = {
+  throughput: [
+    { label: "06:00", value: 124 },
+    { label: "07:00", value: 142 },
+    { label: "08:00", value: 168 },
+    { label: "09:00", value: 176 },
+    { label: "10:00", value: 162 },
+    { label: "11:00", value: 150 },
+  ],
+  ontime: [
+    { label: "ma", value: 95.2 },
+    { label: "di", value: 96.1 },
+    { label: "wo", value: 94.7 },
+    { label: "do", value: 97.5 },
+    { label: "vr", value: 96.8 },
+    { label: "za", value: 95.9 },
+    { label: "zo", value: 94.4 },
+  ],
+  uptime: [
+    { label: "ma", value: 99.5 },
+    { label: "di", value: 99.7 },
+    { label: "wo", value: 99.3 },
+    { label: "do", value: 99.8 },
+    { label: "vr", value: 99.9 },
+    { label: "za", value: 99.6 },
+    { label: "zo", value: 99.4 },
+  ],
+};
+
+export const mockExceptionBreakdown = [
+  { label: "Security check", value: 12 },
+  { label: "Sorteer vertraging", value: 8 },
+  { label: "Transfer", value: 6 },
+  { label: "Label mismatch", value: 4 },
+];
+
+export const mockHubLoad = [
+  { hub: "AMS", inbound: 182, outbound: 174 },
+  { hub: "RTM", inbound: 74, outbound: 69 },
+  { hub: "EIN", inbound: 58, outbound: 64 },
+];

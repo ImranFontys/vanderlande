@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,6 +22,7 @@ body {
     radial-gradient(circle at 82% 0%, rgba(244, 63, 94, 0.12), transparent 34%),
     #fdfbf6;
   color: var(--text);
+  @apply font-sans min-h-screen;
 }
 
 .rounded-xl2 { @apply rounded-2xl; }
@@ -88,6 +91,7 @@ body {
 .pill {
   @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold border border-white/50 bg-white/70;
 }
+<<<<<<< HEAD
 .pill-yellow { @apply border-amber-200 bg-amber-50 text-amber-800; }
 .pill-green { @apply border-emerald-200 bg-emerald-50 text-emerald-800; }
 .pill-orange { @apply border-orange-200 bg-orange-50 text-orange-800; }
@@ -115,4 +119,113 @@ body {
   0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
   70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+=======
+
+.page {
+  @apply max-w-6xl mx-auto w-full;
+}
+
+.eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[0.35em] text-muted;
+}
+
+.lede {
+  @apply text-base leading-relaxed;
+}
+
+.primary-btn {
+  @apply inline-flex items-center justify-center rounded-2xl px-5 py-2.5 font-semibold text-white bg-gradient-to-r from-orange-500 to-rose-500 shadow-soft transition duration-150 ease-out;
+}
+
+.primary-btn:hover {
+  @apply -translate-y-0.5 shadow-glass;
+}
+
+.ghost-btn {
+  @apply inline-flex items-center justify-center rounded-2xl px-5 py-2.5 font-semibold border border-slate-200 text-slate-900 bg-white/80 transition duration-150 ease-out;
+}
+
+.ghost-btn:hover {
+  @apply -translate-y-0.5 shadow-soft;
+}
+
+.ghost-btn.small {
+  @apply px-3 py-1.5 text-sm;
+}
+
+.ghost-select {
+  @apply rounded-2xl border border-slate-200 bg-white/80 text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40;
+}
+
+.live-indicator {
+  @apply inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200;
+}
+
+.pulse {
+  @apply block h-2 w-2 rounded-full bg-emerald-500;
+  animation: live-pulse 1.5s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+.status-chip {
+  @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide;
+}
+
+.badge-icon {
+  @apply h-12 w-12 rounded-full border flex items-center justify-center bg-white;
+}
+
+.badge-icon.complete {
+  @apply bg-emerald-50 border-emerald-200;
+}
+
+.badge-icon.active {
+  @apply bg-amber-50 border-amber-200;
+}
+
+.badge-icon.upcoming {
+  @apply bg-slate-50 border-slate-200;
+}
+
+.chip {
+  @apply inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-700 transition;
+}
+
+.chip-active {
+  @apply bg-slate-900 text-white border-slate-900 shadow-soft;
+}
+
+.chip.complete {
+  @apply bg-emerald-50 border-emerald-200 text-emerald-800;
+}
+
+.chip.active {
+  @apply bg-amber-50 border-amber-200 text-amber-900;
+}
+
+.chip.upcoming {
+  @apply bg-slate-50 border-slate-200 text-muted;
+}
+
+.progress-shell {
+  @apply rounded-3xl border border-white/60 bg-white/90 p-4 shadow-soft;
+}
+
+.progress-fill {
+  @apply bg-gradient-to-r from-orange-500 to-rose-500;
+}
+
+.marker-icon {
+  @apply h-10 w-10 rounded-full border flex items-center justify-center;
+>>>>>>> 827bfc7 (Improve dashboards)
 }

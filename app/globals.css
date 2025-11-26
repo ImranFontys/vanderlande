@@ -46,6 +46,7 @@ body {
 .ghost-btn:hover { @apply border-slate-300 shadow-sm; }
 .ghost-btn:focus-visible { @apply outline outline-2 outline-offset-2 outline-slate-300; }
 .ghost-btn.small { @apply px-3 py-1 text-xs; }
+.primary-btn.small { @apply px-3 py-1 text-xs; }
 
 .input {
   @apply rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-text shadow-inner focus:border-[var(--brand-1)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-1)]/20;
@@ -101,6 +102,13 @@ body {
 }
 .alert.error {
   @apply border-rose-200 bg-rose-50 text-rose-800;
+}
+
+.command-bar .status-dot {
+  @apply h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_0_6px_rgba(16,185,129,0.12)];
+}
+.toast {
+  @apply ml-auto rounded-full bg-slate-900 text-white px-3 py-1 text-xs font-semibold;
 }
 
 @keyframes pulse {

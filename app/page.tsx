@@ -1,11 +1,13 @@
 import { KPICard } from "@/components/KPICard";
 import { TrendChart } from "@/components/TrendChart";
 import { TrackSection } from "@/components/TrackSection";
+import { CommandBar } from "@/components/CommandBar";
 import { mockKpis, mockShipments, mockTrend, mockTrace } from "@/lib/mockData";
 
 export default function Page() {
   return (
     <div className="page px-4 pb-12 space-y-10">
+      <CommandBar />
       <Hero />
       <TrackSection traceData={mockTrace} />
       <DashboardSection />
@@ -19,9 +21,9 @@ function Hero() {
     <header className="hero grid gap-6 lg:grid-cols-2 mt-4">
       <div className="glass rounded-xl2 p-6 border">
         <p className="eyebrow">Logistiek · Realtime</p>
-        <h1 className="text-4xl font-bold text-text">Glass iOS 26 Track & Trace</h1>
+        <h1 className="text-4xl font-bold text-text">Vanderlande Track & Trace</h1>
         <p className="lede text-muted mt-2">
-          Eén duidelijke statusbalk, iconische stappen en operator-dashboard. Modern, helder en gebouwd voor snelheid en vertrouwen.
+          Eén duidelijke statusbalk, heldere workflow en operator-dashboard. Minimal, professioneel en klaar voor live use-cases.
         </p>
         <div className="hero-ctas mt-4 flex gap-3 flex-wrap">
           <a className="primary-btn" href="#track">Start tracking</a>

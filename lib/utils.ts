@@ -1,6 +1,12 @@
-import { mockTrace, statusSteps } from "./mockData";
+import { statusSteps } from "./mockData";
 
-type TraceRecord = (typeof mockTrace)[keyof typeof mockTrace];
+type StatusId = (typeof statusSteps)[number]["id"];
+
+export type TraceRecord = {
+  id: string;
+  currentStatus: StatusId;
+  history: ReadonlyArray<Readonly<{ status: StatusId; label: string; time: string }>>;
+};
 
 export function getState(stepId: number, currentId: number) {
   if (stepId < currentId) return "complete";

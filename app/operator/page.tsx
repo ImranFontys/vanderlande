@@ -13,11 +13,9 @@ import {
   mockKpis,
   statusSteps,
 } from "@/lib/mockData";
-import { buildTraceRecord, getState, sanitizeId } from "@/lib/utils";
+import { buildTraceRecord, getState, sanitizeId, type TraceRecord } from "@/lib/utils";
 import type { ReactNode, RefObject } from "react";
 import { forwardRef, useMemo, useRef, useState } from "react";
-
-type TraceRecord = (typeof mockTrace)[keyof typeof mockTrace];
 
 type HeroStats = {
   liveShipments: number;
@@ -64,6 +62,13 @@ export default function Page() {
     const arrived = shipments.filter((row) => row.status === "arrived").length;
     return { inTransit, arrived };
   }, [shipments]);
+
+  const serviceLevel = Math.round(heroStats.onTime * 100);
+  const uptimePct = (heroStats.uptime * 100).toFixed(1);
+  const mttr = `${Math.max(5, Math.round(heroStats.avgTime))} min`;
+  const backlog = Math.max(0, heroStats.exceptions - 1);
+  const incidentRate = shipments.length ? Math.round((heroStats.exceptions / shipments.length) * 100) : 0;
+  const changeSuccess = Math.min(99, 92 + Math.round(heroStats.onTime * 5));
 
   const showToast = (message: string) => {
     setToast(message);
@@ -165,7 +170,7 @@ export default function Page() {
   };
 
   return (
-    <div className="page px-4 pb-16 space-y-8">
+    <div className="page px-4 pb-16 space-y-10 max-w-7xl mx-auto">
       <OperatorNav />
       <Hero stats={heroStats} spotlight={activeBag} onStartTracking={handleStartTracking} onViewOps={handleViewOps} />
       <OpsToolbar stats={heroStats} onRefresh={handleRefreshDashboard} inTransit={opsCounts.inTransit} />
@@ -202,6 +207,12 @@ export default function Page() {
         toast={toast}
         totalShipments={shipments.length}
         exceptions={heroStats.exceptions}
+        serviceLevel={serviceLevel}
+        uptimePct={uptimePct}
+        mttr={mttr}
+        incidentRate={incidentRate}
+        changeSuccess={changeSuccess}
+        backlog={backlog}
       />
       <SupportSection onGenerateDemo={handleGenerateId} />
     </div>
@@ -218,17 +229,26 @@ type HeroProps = {
 function OperatorNav() {
   const now = new Date().toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
   return (
-    <nav className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-3 text-sm text-slate-600">
-      <div className="flex items-center gap-4">
-        <span className="font-semibold text-slate-900 text-lg">Glass Ops</span>
-        <a href="/" className="hover:text-slate-900">Passagier</a>
-        <a href="#track" className="hover:text-slate-900">Track</a>
-        <a href="#ops" className="hover:text-slate-900">Dashboard</a>
-        <a href="#support" className="hover:text-slate-900">Support</a>
+    <nav
+      className="rounded-full border border-slate-200 bg-white/80 px-4 py-3 shadow-sm backdrop-blur text-sm text-slate-700 flex flex-wrap items-center justify-between gap-3"
+      aria-label="Operator navigatie"
+    >
+      <div className="flex items-center gap-3">
+        <span className="inline-flex items-center gap-2 font-semibold text-slate-900 text-base">
+          <img src="/vanderlande-logo.png" alt="Vanderlande" className="h-6 w-auto" />
+          Glass Ops
+        </span>
+        <span className="hidden sm:flex h-4 w-px bg-slate-200" aria-hidden />
+        <div className="flex items-center gap-3" role="list">
+          <a href="/" className="hover:text-slate-900" role="listitem">Passagier</a>
+          <a href="#track" className="hover:text-slate-900" role="listitem">Track</a>
+          <a href="#ops" className="hover:text-slate-900" role="listitem">Dashboard</a>
+          <a href="#support" className="hover:text-slate-900" role="listitem">Support</a>
+        </div>
       </div>
       <div className="flex items-center gap-3">
-        <span>{now}</span>
-        <button className="ghost-btn small">Shift log</button>
+        <span className="font-mono text-xs text-muted" aria-label="Huidige tijd">{now}</span>
+        <button className="ghost-btn small" type="button">Shift log</button>
       </div>
     </nav>
   );
@@ -237,26 +257,29 @@ function OperatorNav() {
 type OpsToolbarProps = { stats: HeroStats; onRefresh: () => void; inTransit: number };
 
 function OpsToolbar({ stats, onRefresh, inTransit }: OpsToolbarProps) {
-  const openCases = stats.exceptions;
-  const escalations = Math.max(0, openCases - 2);
-  const waitTime = `${Math.max(5, Math.round(stats.avgTime / 2))} min`;
   const cards = [
-    { label: "Open klantcases", value: openCases, detail: "Helpdesk tickets" },
-    { label: "In escalatie", value: escalations, detail: "Direct opvolgen" },
-    { label: "Gem. wachttijd", value: waitTime, detail: "Contact center" },
-    { label: "Bags in transit", value: inTransit, detail: "Live beweging" },
+    { label: "SLA on-time", value: `${Math.round(stats.onTime * 100)}%`, detail: "Laatste 24u" },
+    { label: "Platform uptime", value: `${(stats.uptime * 100).toFixed(1)}%`, detail: "Rolling 7d" },
+    { label: "MTTR", value: `${Math.max(5, Math.round(stats.avgTime))} min`, detail: "Incident herstel" },
+    { label: "Exceptions open", value: stats.exceptions, detail: "Support wachtrij" },
   ];
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white/70 p-4 flex flex-wrap items-center gap-4 justify-between">
-      <div className="flex gap-2">
-        <button className="ghost-btn small" onClick={onRefresh}>Refresh</button>
-        <button className="ghost-btn small">Escalatie log</button>
+    <section className="rounded-3xl border border-slate-200 bg-white/80 p-4 lg:p-5 flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="eyebrow text-muted">Operations</p>
+          <p className="text-sm text-slate-700">Business & IT health</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="ghost-btn small" onClick={onRefresh}>Refresh</button>
+          <button className="ghost-btn small" type="button">Escalatie log</button>
+        </div>
       </div>
-      <div className="flex flex-wrap gap-4 text-sm text-muted">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm text-muted">
         {cards.map((card) => (
-          <div key={card.label}>
-            <p className="uppercase tracking-[0.2em] text-xs">{card.label}</p>
-            <p className="text-lg font-semibold text-slate-900">{card.value}</p>
+          <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+            <p className="uppercase tracking-[0.2em] text-[11px]">{card.label}</p>
+            <p className="text-xl font-semibold text-slate-900 mt-1">{card.value}</p>
             <p className="text-xs">{card.detail}</p>
           </div>
         ))}
@@ -267,65 +290,66 @@ function OpsToolbar({ stats, onRefresh, inTransit }: OpsToolbarProps) {
 
 function Hero({ onStartTracking, onViewOps, stats, spotlight }: HeroProps) {
   const highlightCards = [
-    { label: "Open cases", value: stats.exceptions, detail: "Passagiers hulp" },
-    { label: "Service level", value: `${Math.round(stats.onTime * 100)}%`, detail: "SLA" },
-    { label: "Gem. afhandelduur", value: `${stats.avgTime} min`, detail: "Bagage & helpdesk" },
-    { label: "System uptime", value: `${(stats.uptime * 100).toFixed(1)}%`, detail: "Platform" },
+    { label: "SLA on-time", value: `${Math.round(stats.onTime * 100)}%`, detail: "Laatste 24u" },
+    { label: "Uptime", value: `${(stats.uptime * 100).toFixed(1)}%`, detail: "Rolling 7d" },
+    { label: "MTTR", value: `${Math.max(5, Math.round(stats.avgTime))} min`, detail: "Hersteltijd" },
+    { label: "Exceptions", value: stats.exceptions, detail: "Open cases" },
   ];
   const upcoming = statusSteps.find((step) => step.id === spotlight.currentStatus + 1);
 
   return (
-    <header className="hero space-y-6 mt-6">
-      <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-        <div className="rounded-3xl border border-slate-200 bg-white/80 p-8">
-          <p className="eyebrow text-slate-500">Control room</p>
-          <h1 className="text-4xl font-semibold leading-snug text-slate-900">Track & Trace voor operators</h1>
-          <p className="lede text-muted mt-4 max-w-2xl">
-            Live overzicht van bagage en klantcases, ontworpen voor overzicht en snelle opvolging.
-          </p>
-          <div className="hero-ctas mt-6 flex flex-wrap gap-3">
+    <header className="hero space-y-8 mt-6">
+      <div className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr]">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-7 lg:p-8 flex flex-col gap-6">
+          <div className="space-y-3">
+            <p className="eyebrow text-slate-500">Control room</p>
+            <h1 className="text-4xl font-semibold leading-snug text-slate-900">Operator dashboard</h1>
+            <p className="lede text-muted max-w-2xl">
+              Live overzicht voor dispatch en monitoring. Zet acties uit, volg zendingen en houd KPI&apos;s gezond.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {highlightCards.map((card) => (
+              <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted">{card.label}</p>
+                <p className="text-2xl font-semibold mt-1 text-slate-900">{card.value}</p>
+                <p className="text-xs text-muted">{card.detail}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3">
             <button className="primary-btn" onClick={onStartTracking}>Ga naar track</button>
             <button className="ghost-btn" onClick={onViewOps}>Dashboard</button>
           </div>
         </div>
-        <div className="glass rounded-3xl p-6 border">
+        <div className="glass rounded-3xl p-6 border space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="eyebrow text-slate-500">Spotlight zending</p>
               <h3 className="text-2xl font-semibold text-slate-900">{spotlight.id}</h3>
+              <p className="text-sm text-muted mt-1">Volgende stap: {upcoming ? upcoming.label : "Compleet"}</p>
             </div>
             <span className="status-chip bg-emerald-100 text-emerald-900 border-emerald-200">
               {statusSteps.find((s) => s.id === spotlight.currentStatus)?.label}
             </span>
           </div>
-          <p className="text-sm text-muted mt-1">Volgende stap: {upcoming ? upcoming.label : "Compleet"}</p>
-          <div className="mt-4 space-y-3">
-            {spotlight.history.map((item) => (
-              <div key={item.status} className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2 text-sm">
-                <div>
-                  <p className="font-semibold text-slate-900">{item.label}</p>
-                  <p className="text-muted text-xs">Status {item.status}</p>
-                </div>
-                <span className="text-slate-900 font-semibold">{item.time}</span>
-              </div>
-            ))}
+          <TraceProgress current={spotlight.currentStatus} />
+          <div className="grid gap-3 text-sm sm:grid-cols-2">
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <p className="text-muted">Laatste scan</p>
+              <p className="font-semibold text-slate-900">{spotlight.history[spotlight.history.length - 1]?.time ?? "-"}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <p className="text-muted">Volgende checkpoint</p>
+              <p className="font-semibold text-slate-900">{upcoming ? upcoming.label : "Afronding"}</p>
+            </div>
           </div>
-          <div className="mt-4 text-xs text-muted uppercase tracking-[0.2em]">Live feed</div>
-          <div className="mt-2 rounded-2xl bg-slate-900/90 text-white p-4 font-mono text-xs space-y-1">
+          <div className="rounded-2xl bg-slate-900/90 text-white p-4 font-mono text-xs space-y-1" aria-live="polite">
             <p>&gt; watch {spotlight.id}</p>
             <p>&gt; step {spotlight.currentStatus} acknowledged</p>
             <p>&gt; awaiting {upcoming ? upcoming.label : "handover"}</p>
           </div>
         </div>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {highlightCards.map((card) => (
-          <div key={card.label} className="glass rounded-2xl p-4 border">
-            <p className="text-sm text-muted">{card.label}</p>
-            <p className="text-2xl font-semibold mt-1">{card.value}</p>
-            <p className="text-xs text-muted">{card.detail}</p>
-          </div>
-        ))}
       </div>
     </header>
   );
@@ -444,7 +468,7 @@ const TrackSection = forwardRef<HTMLElement, TrackSectionProps>(function TrackSe
           </div>
         </div>
       </div>
-      <div className="space-y-2 border-l border-slate-200 pl-5">
+      <div className="space-y-2 border-l border-slate-200 pl-5" aria-live="polite">
         {statusSteps.map((step) => {
           const state = getState(step.id, bag.currentStatus);
           const historyItem = bag.history.find((h) => h.status === step.id);
@@ -483,6 +507,12 @@ type DashboardProps = {
   toast: string | null;
   totalShipments: number;
   exceptions: number;
+  serviceLevel: number;
+  uptimePct: string;
+  mttr: string;
+  incidentRate: number;
+  changeSuccess: number;
+  backlog: number;
 };
 
 function DashboardSection({
@@ -501,17 +531,24 @@ function DashboardSection({
   toast,
   totalShipments,
   exceptions,
+  serviceLevel,
+  uptimePct,
+  mttr,
+  incidentRate,
+  changeSuccess,
+  backlog,
 }: DashboardProps) {
   const inTransit = shipments.filter((row) => row.status === "intransit").length;
   const arrived = shipments.filter((row) => row.status === "arrived").length;
   const summary = [
-    { label: "Live bags", value: totalShipments, hint: "Realtime" },
-    { label: "In transit", value: inTransit, hint: "Onderweg" },
-    { label: "Aangekomen", value: arrived, hint: "Laatste uur" },
-    { label: "Open cases", value: exceptions, hint: "Support" },
+    { label: "SLA on-time", value: `${serviceLevel}%`, hint: "Laatste 24u" },
+    { label: "Uptime", value: `${uptimePct}%`, hint: "Rolling 7d" },
+    { label: "MTTR", value: mttr, hint: "Incident herstel" },
+    { label: "Incident rate", value: `${incidentRate}%`, hint: "Exceptions / totaal" },
   ];
   const peakTraffic = trend.length ? Math.max(...trend) : 0;
-  const throughputNow = throughputTrend[throughputTrend.length - 1];
+  const throughputLatest = throughputTrend[throughputTrend.length - 1];
+  const throughputValue = throughputLatest?.value ?? 0;
   const onTimeNow = ontimeTrend[ontimeTrend.length - 1];
   const uptimeNow = uptimeTrend[uptimeTrend.length - 1];
   const exceptionTotal = exceptionsBreakdown.reduce((sum, entry) => sum + entry.value, 0);
@@ -527,19 +564,20 @@ function DashboardSection({
 
   return (
     <section id="ops" className="mt-16 space-y-6 w-full max-w-7xl mx-auto">
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-5 space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
+      <div className="rounded-3xl border border-slate-200 bg-white/85 p-5 space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
             <p className="eyebrow">Operator view</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Monitor</h2>
-            <p className="text-muted">Gebruik filters, scan nieuwe labels en houd het netwerk gezond.</p>
+            <h2 className="text-3xl font-semibold text-slate-900">Monitor & dispatch</h2>
+            <p className="text-muted text-sm">Gebruik filters, scan nieuwe labels en houd het netwerk gezond.</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="statusFilter" className="sr-only">Filter op status</label>
             <select
+              id="statusFilter"
               className="ghost-select"
               value={statusFilter}
               onChange={(event) => onFilterChange(event.target.value)}
-              aria-label="Filter op status"
             >
               <option value="all">Alle status</option>
               <option value="intransit">In transit</option>
@@ -550,17 +588,41 @@ function DashboardSection({
             {statusFilter !== "all" && (
               <button className="ghost-btn small" onClick={() => onFilterChange("all")}>Reset</button>
             )}
+            <button className="ghost-btn small" onClick={onScan}>Scan</button>
+            <button className="ghost-btn small" onClick={onExport}>Export</button>
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {summary.map((item) => (
-            <div key={item.label} className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-muted">{item.label}</p>
+            <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted">{item.label}</p>
               <p className="text-2xl font-semibold text-slate-900 mt-1">{item.value}</p>
               <p className="text-xs text-muted">{item.hint}</p>
             </div>
           ))}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Change success</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-1">{changeSuccess}%</p>
+            <p className="text-xs text-muted">Deploys + incidents</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Backlog</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-1">{backlog}</p>
+            <p className="text-xs text-muted">Nog te behandelen</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Live shipments</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-1">{totalShipments}</p>
+            <p className="text-xs text-muted">Realtime</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Throughput nu</p>
+            <p className="text-2xl font-semibold text-slate-900 mt-1">{throughputValue} bags/u</p>
+            <p className="text-xs text-muted">Laatste slot</p>
+          </div>
         </div>
       </div>
 
@@ -592,29 +654,42 @@ function DashboardSection({
                 <button className="ghost-btn small" onClick={onExport}>Export</button>
               </div>
             </div>
-            <div className="divide-y divide-slate-100">
-              <div className="grid grid-cols-5 gap-2 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted bg-slate-50">
-                <span>ID</span>
-                <span>Status</span>
-                <span>ETA</span>
-                <span>Hub</span>
-                <span className="text-right">Actie</span>
-              </div>
-              {shipments.length === 0 ? (
-                <div className="px-5 py-6 text-sm text-muted">
-                  Geen zendingen in deze filter. Gebruik reset om alles te tonen.
-                </div>
-              ) : (
-                shipments.map((row) => (
-                  <div key={row.id} className="grid grid-cols-5 gap-2 px-5 py-4 items-center text-sm text-slate-900 hover:bg-slate-50">
-                    <span className="font-mono">{row.id}</span>
-                    <span className={`pill font-semibold ${getShipmentTone(row.status)}`}>{row.label}</span>
-                    <span>{row.eta}</span>
-                    <span>{row.hub}</span>
-                    <span className="text-right text-accent font-semibold"><a href="#track">Open</a></span>
-                  </div>
-                ))
-              )}
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm text-slate-900">
+                <caption className="sr-only">Actieve zendingen</caption>
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-muted">
+                  <tr className="[&>th]:px-5 [&>th]:py-3 [&>th]:text-left">
+                    <th scope="col">ID</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">ETA</th>
+                    <th scope="col">Hub</th>
+                    <th scope="col" className="text-right">Actie</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100" aria-live="polite">
+                  {shipments.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-6 text-muted">
+                        Geen zendingen in deze filter. Gebruik reset om alles te tonen.
+                      </td>
+                    </tr>
+                  ) : (
+                    shipments.map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50">
+                        <td className="px-5 py-3 font-mono align-middle">{row.id}</td>
+                        <td className="px-5 py-3 align-middle">
+                          <span className={`pill font-semibold ${getShipmentTone(row.status)}`}>{row.label}</span>
+                        </td>
+                        <td className="px-5 py-3 align-middle">{row.eta}</td>
+                        <td className="px-5 py-3 align-middle">{row.hub}</td>
+                        <td className="px-5 py-3 text-right align-middle">
+                          <a href="#track" className="text-accent font-semibold">Open</a>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -624,31 +699,31 @@ function DashboardSection({
               <KpiChartCard
                 title="Doorvoer per uur"
                 description="Laatste 6 tijdsloten"
-                highlight={throughputNow ? `${throughputNow.value} bags/u` : "-"}
+                highlight={throughputLatest ? `${throughputLatest.value} bags/u` : "-"}
               >
-              <ThroughputChart data={throughputTrend} />
-            </KpiChartCard>
-            <KpiChartCard
-              title="On-time performance"
-              description="Doel 97%"
-              highlight={onTimeNow ? `${onTimeNow.value.toFixed(1)}%` : "-"}
-            >
-              <OnTimeChart data={ontimeTrend} />
-            </KpiChartCard>
-            <KpiChartCard
-              title="Systeem uptime"
-              description="Laatste week"
-              highlight={uptimeNow ? `${uptimeNow.value.toFixed(2)}%` : "-"}
-            >
-              <UptimeGauge data={uptimeTrend} />
-            </KpiChartCard>
-            <KpiChartCard
-              title="Exception oorzaken"
-              description="Laatste 24 uur"
-              highlight={`${exceptionTotal} meldingen`}
-            >
-              <ExceptionBarChart data={exceptionsBreakdown} />
-            </KpiChartCard>
+                <ThroughputChart data={throughputTrend} />
+              </KpiChartCard>
+              <KpiChartCard
+                title="On-time performance"
+                description="Doel 97%"
+                highlight={onTimeNow ? `${onTimeNow.value.toFixed(1)}%` : "-"}
+              >
+                <OnTimeChart data={ontimeTrend} />
+              </KpiChartCard>
+              <KpiChartCard
+                title="Systeem uptime"
+                description="Laatste week"
+                highlight={uptimeNow ? `${uptimeNow.value.toFixed(2)}%` : "-"}
+              >
+                <UptimeGauge data={uptimeTrend} />
+              </KpiChartCard>
+              <KpiChartCard
+                title="Exception oorzaken"
+                description="Laatste 24 uur"
+                highlight={`${exceptionTotal} meldingen`}
+              >
+                <ExceptionBarChart data={exceptionsBreakdown} />
+              </KpiChartCard>
               <KpiChartCard
                 title="Hub belasting"
                 description="Inbound + outbound"

@@ -14,9 +14,9 @@ export async function GET(request: Request) {
   if (!id) {
     return NextResponse.json({ error: "id_required" }, { status: 400 });
   }
-  const record = mockTrace[id];
-  if (!record) {
+  if (!(id in mockTrace)) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  const record = mockTrace[id as keyof typeof mockTrace];
   return NextResponse.json(record);
 }

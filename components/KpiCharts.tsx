@@ -77,7 +77,7 @@ export function UptimeGauge({ data }: { data: Point[] }) {
         cx="50%"
         cy="55%"
       >
-        <RadialBar dataKey="value" minAngle={15} clockWise cornerRadius={50} />
+        <RadialBar dataKey="value" cornerRadius={50} />
         <Tooltip
           cursor={false}
           contentStyle={tooltipStyle}

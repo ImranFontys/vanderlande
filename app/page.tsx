@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useEta } from "@/hooks/useEta";
 import { getPassengerCopy, type FormError, type Language } from "@/lib/i18n/passenger";
 import { mockTrace, statusSteps } from "@/lib/mockData";
-import { buildTraceRecord, getState, sanitizeId, type TraceRecord } from "@/lib/utils";
+import { buildTraceRecord, sanitizeId, type TraceRecord } from "@/lib/utils";
 import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 const STEP_ETA_MAP: Record<number, number> = {
@@ -27,12 +27,10 @@ export default function PassengerPage() {
   const [records, setRecords] = useState<Record<string, TraceRecord>>(() => ({ ...mockTrace }));
   const [bagInput, setBagInput] = useState("bag001");
   const [selectedBagId, setSelectedBagId] = useState("bag001");
-  const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [errorKey, setErrorKey] = useState<FormError | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const trackSectionRef = useRef<HTMLElement | null>(null);
-  const routeSectionRef = useRef<HTMLElement | null>(null);
   const { language, setLanguage, languages } = useLanguage();
 
   const copy = useMemo(() => getPassengerCopy(language), [language]);
@@ -51,15 +49,16 @@ export default function PassengerPage() {
     waitMessage: copy.eta.waitMessage,
     tips: copy.eta.tips,
   });
+  const lastScanTime = activeBag.history[activeBag.history.length - 1]?.time ?? "-";
   const errorMessage = errorKey ? copy.form.errors[errorKey] : null;
   const summaryItems = useMemo(
     () => [
       { label: copy.summary.status, value: statusLabels[activeBag.currentStatus] },
-      { label: copy.summary.lastUpdate, value: activeBag.history[activeBag.history.length - 1]?.time ?? "-" },
+      { label: copy.summary.lastUpdate, value: lastScanTime },
       { label: copy.summary.id, value: activeBag.id },
       { label: copy.summary.eta, value: etaTime },
     ],
-    [activeBag, copy.summary, etaTime, statusLabels]
+    [activeBag, copy.summary, etaTime, lastScanTime, statusLabels]
   );
   const inputWidthStyle = useMemo(() => {
     const reference = bagInput.trim().length > 0 ? bagInput : copy.form.placeholder;
@@ -118,12 +117,8 @@ export default function PassengerPage() {
     scrollToInput();
   };
 
-  const scrollToRoute = () => {
-    routeSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
-    <main className="page spark-field px-4 pt-6 pb-10 md:pt-8 md:pb-12 space-y-8 md:space-y-10 flex flex-col items-center bg-gradient-to-br from-slate-50 via-white to-sky-50">
+    <main className="page px-4 pt-6 pb-10 md:pt-8 md:pb-12 space-y-8 md:space-y-10 flex flex-col items-center">
       <div className="flex justify-end w-full max-w-3xl">
         <span className="sr-only" id="language-selector-label">
           {copy.languageToggle}
@@ -175,17 +170,11 @@ export default function PassengerPage() {
           <button type="button" className="primary-btn px-5" onClick={scrollToTrack}>
             {copy.ui.ctaTrack}
           </button>
-          <button type="button" className="ghost-btn px-5" onClick={scrollToRoute}>
-            {copy.ui.ctaHow}
-          </button>
         </div>
       </header>
 
       <section className="w-full max-w-xl" ref={trackSectionRef}>
-        <form
-          className="glass rounded-3xl p-6 border border-slate-100 space-y-5 glow-card shadow-lg shadow-slate-200/60 backdrop-blur-sm bg-white/85"
-          onSubmit={handleSubmit}
-        >
+        <form className="glass rounded-3xl p-6 track-card space-y-5 shadow-lg shadow-slate-200/60" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2">
             <label htmlFor="bagInput" className="text-sm font-semibold text-muted text-center">
               {copy.form.label}
@@ -242,7 +231,7 @@ export default function PassengerPage() {
       </section>
 
       <div className="w-full max-w-3xl">
-        <SummaryCard items={summaryItems} helperText={`${etaStatus} ${etaTip}`} className="glow-card">
+        <SummaryCard items={summaryItems} helperText={`${etaStatus} ${etaTip}`} className="glow-card track-card">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="inline-flex items-center gap-2 text-emerald-700 font-semibold">
               <span
@@ -255,55 +244,6 @@ export default function PassengerPage() {
           <TraceProgress current={activeBag.currentStatus} steps={localizedSteps} />
         </SummaryCard>
       </div>
-
-      <section className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white/80 p-5 space-y-3 glow-card text-center sm:text-left" ref={routeSectionRef}>
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-[0.3em] text-center">
-          {copy.route.heading}
-        </h2>
-        <ol className="space-y-2">
-          {localizedSteps.map((step) => {
-            const state = getState(step.id, activeBag.currentStatus);
-            const historyItem = activeBag.history.find((h) => h.status === step.id);
-            const isOpen = expandedStep === step.id;
-            const info = copy.stepDescriptions[step.id];
-            const detail = historyItem
-              ? `${info.title}: ${info.body}`
-              : state === "active"
-                ? `${info.title}: ${copy.route.detailActive}`
-                : `${info.title}: ${copy.route.detailUpcoming}`;
-            const stateLabel = historyItem
-              ? historyItem.time
-              : state === "active"
-                ? copy.route.shortActive
-                : copy.route.shortUpcoming;
-            return (
-              <li key={step.id} className="rounded-2xl border border-slate-200 transition-colors hover:border-slate-300 hover:bg-slate-50">
-                <button
-                  type="button"
-                  className="flex flex-col gap-2 sm:flex-row sm:items-center w-full justify-between px-4 py-3 text-center sm:text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400"
-                  onClick={() => setExpandedStep((prev) => (prev === step.id ? null : step.id))}
-                >
-                  <span className="font-semibold text-slate-900">{statusLabels[step.id]}</span>
-                  <span className="flex items-center justify-center gap-2 text-muted">
-                    {stateLabel}
-                    <span className={`transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}>&rsaquo;</span>
-                  </span>
-                </button>
-                {isOpen && (
-                  <div className="border-t border-slate-100 px-4 py-3 text-sm text-muted text-left sm:text-base">
-                    {detail}
-                    {historyItem && (
-                      <div className="mt-1 text-xs text-slate-500">
-                        {copy.route.lastScanPrefix} {historyItem.time}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      </section>
 
       <div className="sm:hidden fixed bottom-4 right-4 z-20">
         <button

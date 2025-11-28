@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="nl" className="scroll-smooth">
-      <body className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-rose-50 text-text antialiased">
+      <body className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-rose-50 text-text antialiased ambient-bg">
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

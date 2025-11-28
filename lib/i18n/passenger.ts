@@ -46,6 +46,14 @@ export type PassengerTranslation = {
     detailActive: string;
     detailUpcoming: string;
     lastScanPrefix: string;
+    currentTitle: string;
+    nextTitle: string;
+    overviewTitle: string;
+    doneMessage: string;
+    toggleShow: string;
+    toggleHide: string;
+    recentTitle: string;
+    tipLabel: string;
   };
   statusLabels: Record<StatusId, string>;
   stepDescriptions: StepDescriptions;
@@ -109,12 +117,20 @@ const translations: Record<Language, PassengerTranslation> = {
       },
     },
     route: {
-      heading: "Route",
+      heading: "Route & tips",
       shortActive: "Onderweg",
       shortUpcoming: "Nog niet",
       detailActive: "Je bagage is onderweg naar dit punt.",
       detailUpcoming: "Deze stap volgt zodra het traject zover is.",
       lastScanPrefix: "Laatste scan om",
+      currentTitle: "Nu bezig",
+      nextTitle: "Hierna",
+      overviewTitle: "Route-overzicht",
+      doneMessage: "Je bagage is klaar, er zijn geen volgende stappen meer.",
+      toggleShow: "Toon details",
+      toggleHide: "Verberg details",
+      recentTitle: "Laatste scans",
+      tipLabel: "Tip",
     },
     statusLabels: {
       1: "Ingecheckt",
@@ -208,12 +224,20 @@ const translations: Record<Language, PassengerTranslation> = {
       },
     },
     route: {
-      heading: "Journey",
+      heading: "Route & tips",
       shortActive: "In progress",
       shortUpcoming: "Pending",
       detailActive: "Your bag is traveling to this stage.",
       detailUpcoming: "This step will start once the process reaches it.",
       lastScanPrefix: "Last scan at",
+      currentTitle: "In progress",
+      nextTitle: "Up next",
+      overviewTitle: "Route overview",
+      doneMessage: "Your bag is finished; no more steps ahead.",
+      toggleShow: "Show details",
+      toggleHide: "Hide details",
+      recentTitle: "Recent scans",
+      tipLabel: "Tip",
     },
     statusLabels: {
       1: "Checked in",

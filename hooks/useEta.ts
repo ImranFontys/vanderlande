@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type UseEtaOptions = {
   currentStatus: number;
@@ -19,17 +19,26 @@ export function useEta({
   waitMessage,
   tips,
 }: UseEtaOptions) {
-  return useMemo(() => {
-    const etaMinutes = etaMap[currentStatus] ?? 0;
-    const etaTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString(locale, {
+  const etaMinutes = etaMap[currentStatus] ?? 0;
+  const [etaTime, setEtaTime] = useState("");
+
+  useEffect(() => {
+    const nextTime = new Date(Date.now() + etaMinutes * 60000).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
+    setEtaTime(nextTime);
+  }, [etaMinutes, locale]);
 
-    const etaTip =
-      etaMinutes === 0 ? tips.done : etaMinutes > 20 ? tips.busy : tips.soon;
-    const etaStatus = etaMinutes === 0 ? noWaitText : waitMessage(etaMinutes);
+  const etaTip = useMemo(
+    () => (etaMinutes === 0 ? tips.done : etaMinutes > 20 ? tips.busy : tips.soon),
+    [etaMinutes, tips.busy, tips.done, tips.soon]
+  );
+  const etaStatus = useMemo(
+    () => (etaMinutes === 0 ? noWaitText : waitMessage(etaMinutes)),
+    [etaMinutes, noWaitText, waitMessage]
+  );
 
-    return { etaMinutes, etaTime, etaTip, etaStatus };
-  }, [currentStatus, etaMap, locale, noWaitText, waitMessage, tips]);
+  return { etaMinutes, etaTime, etaTip, etaStatus };
 }

@@ -46,23 +46,6 @@ body {
 .glow-card {
   position: relative;
   overflow: hidden;
-  animation: floaty 18s ease-in-out infinite;
-}
-.glow-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(255, 122, 26, 0.08), rgba(244, 63, 94, 0.08));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-.glow-card:hover::before {
-  opacity: 1;
-}
-.glow-card:hover {
-  transform: translateY(-3px);
-  transition: transform 0.3s ease;
 }
 
 .btn-pop {
@@ -289,6 +272,11 @@ body {
   @apply h-10 w-10 rounded-full border flex items-center justify-center;
 }
 
+.track-card {
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
 .ambient-bg {
   position: relative;
   overflow-x: hidden;

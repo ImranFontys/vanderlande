@@ -210,6 +210,7 @@ function OperatorNav() {
           <a href="/" className="hover:text-slate-900" role="listitem">Passagier</a>
           <a href="#track" className="hover:text-slate-900" role="listitem">Track</a>
           <a href="#ops" className="hover:text-slate-900" role="listitem">Dashboard</a>
+          <a href="/insights" className="hover:text-slate-900" role="listitem">Insights</a>
           <a href="#support" className="hover:text-slate-900" role="listitem">Support</a>
         </div>
       </div>

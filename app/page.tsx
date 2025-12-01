@@ -6,8 +6,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useEta } from "@/hooks/useEta";
 import { getPassengerCopy, type FormError, type Language } from "@/lib/i18n/passenger";
 import { mockTrace, statusSteps } from "@/lib/mockData";
-import { buildTraceRecord, sanitizeId, type TraceRecord } from "@/lib/utils";
+import { buildTraceRecord, getState, sanitizeId } from "@/lib/utils";
 import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+
+type TraceRecord = (typeof mockTrace)[keyof typeof mockTrace];
 
 const STEP_ETA_MAP: Record<number, number> = {
   1: 35,
@@ -27,10 +29,9 @@ export default function PassengerPage() {
   const [records, setRecords] = useState<Record<string, TraceRecord>>(() => ({ ...mockTrace }));
   const [bagInput, setBagInput] = useState("bag001");
   const [selectedBagId, setSelectedBagId] = useState("bag001");
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [errorKey, setErrorKey] = useState<FormError | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const trackSectionRef = useRef<HTMLElement | null>(null);
   const { language, setLanguage, languages } = useLanguage();
 
   const copy = useMemo(() => getPassengerCopy(language), [language]);
@@ -49,16 +50,15 @@ export default function PassengerPage() {
     waitMessage: copy.eta.waitMessage,
     tips: copy.eta.tips,
   });
-  const lastScanTime = activeBag.history[activeBag.history.length - 1]?.time ?? "-";
   const errorMessage = errorKey ? copy.form.errors[errorKey] : null;
   const summaryItems = useMemo(
     () => [
       { label: copy.summary.status, value: statusLabels[activeBag.currentStatus] },
-      { label: copy.summary.lastUpdate, value: lastScanTime },
+      { label: copy.summary.lastUpdate, value: activeBag.history[activeBag.history.length - 1]?.time ?? "-" },
       { label: copy.summary.id, value: activeBag.id },
       { label: copy.summary.eta, value: etaTime },
     ],
-    [activeBag, copy.summary, etaTime, lastScanTime, statusLabels]
+    [activeBag, copy.summary, etaTime, statusLabels]
   );
   const inputWidthStyle = useMemo(() => {
     const reference = bagInput.trim().length > 0 ? bagInput : copy.form.placeholder;
@@ -70,7 +70,6 @@ export default function PassengerPage() {
     const sanitized = sanitizeId(bagInput);
     if (!sanitized) {
       setErrorKey("invalidId");
-      setToast(copy.form.errors.invalidId);
       return;
     }
     setErrorKey(null);
@@ -79,7 +78,6 @@ export default function PassengerPage() {
       setRecords((prev) => ({ ...prev, [sanitized]: generated }));
     }
     setSelectedBagId(sanitized);
-    setToast(`${copy.summary.id} ${sanitized} geladen`);
     setTimeout(() => inputRef.current?.blur(), 100);
   };
 
@@ -107,18 +105,8 @@ export default function PassengerPage() {
     }
   };
 
-  const scrollToInput = () => {
-    inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    inputRef.current?.focus();
-  };
-
-  const scrollToTrack = () => {
-    trackSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    scrollToInput();
-  };
-
   return (
-    <main className="page px-4 pt-6 pb-10 md:pt-8 md:pb-12 space-y-8 md:space-y-10 flex flex-col items-center">
+    <main className="page px-4 pt-12 pb-16 space-y-10 flex flex-col items-center max-w-7xl mx-auto">
       <div className="flex justify-end w-full max-w-3xl">
         <span className="sr-only" id="language-selector-label">
           {copy.languageToggle}
@@ -133,7 +121,9 @@ export default function PassengerPage() {
             <button
               key={code}
               type="button"
-              className={`px-3 py-1 transition ${language === code ? "bg-slate-900 text-white" : "text-slate-600"}`}
+              className={`px-3 py-1 transition ${
+                language === code ? "bg-slate-900 text-white" : "text-slate-600"
+              }`}
               role="radio"
               aria-checked={language === code}
               aria-label={languageNames[code]}
@@ -144,19 +134,17 @@ export default function PassengerPage() {
           ))}
         </div>
       </div>
-
       <div className="w-full flex justify-center">
-        <div className="rounded-full bg-white/85 backdrop-blur px-3 py-2 shadow-md shadow-orange-200/60 border border-slate-100">
+        <div className="rounded-full bg-white/80 backdrop-blur px-4 py-3 shadow-md shadow-orange-200/60 border border-slate-100">
           <img
             src="/vanderlande-logo.png"
             alt="Vanderlande logo"
-            className="h-14 w-auto sm:h-16 md:h-20 drop-shadow-sm"
+            className="h-16 w-auto sm:h-20 md:h-24 drop-shadow-sm"
             loading="eager"
           />
         </div>
       </div>
-
-      <header className="text-center space-y-3 w-full max-w-2xl leading-relaxed">
+      <header className="text-center space-y-4 w-full max-w-2xl leading-relaxed">
         <p className="eyebrow">{copy.hero.eyebrow}</p>
         <h1 className="text-4xl font-semibold text-slate-900">{copy.hero.title}</h1>
         <p className="text-sm text-muted">
@@ -166,20 +154,18 @@ export default function PassengerPage() {
           </a>
           {copy.hero.operatorLinkSuffix}
         </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <button type="button" className="primary-btn px-5" onClick={scrollToTrack}>
-            {copy.ui.ctaTrack}
-          </button>
-        </div>
       </header>
 
-      <section className="w-full max-w-xl" ref={trackSectionRef}>
-        <form className="glass rounded-3xl p-6 track-card space-y-5 shadow-lg shadow-slate-200/60" onSubmit={handleSubmit}>
+      <section className="w-full max-w-xl">
+        <form
+          className="glass rounded-3xl p-6 border border-slate-100 space-y-5 glow-card shadow-lg shadow-slate-200/60 backdrop-blur-sm bg-white/85"
+          onSubmit={handleSubmit}
+        >
           <div className="flex flex-col gap-2">
             <label htmlFor="bagInput" className="text-sm font-semibold text-muted text-center">
               {copy.form.label}
             </label>
-            <p className="text-xs text-muted text-center">{copy.ui.enterHint}</p>
+            <p className="text-xs text-muted text-center">Druk op Enter om direct te zoeken.</p>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <input
                 ref={inputRef}
@@ -231,57 +217,80 @@ export default function PassengerPage() {
       </section>
 
       <div className="w-full max-w-3xl">
-        <SummaryCard items={summaryItems} helperText={`${etaStatus} ${etaTip}`} className="glow-card track-card">
+        <SummaryCard items={summaryItems} helperText={`${etaStatus} ${etaTip}`} className="glow-card">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="inline-flex items-center gap-2 text-emerald-700 font-semibold">
               <span
                 className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_0_6px_rgba(16,185,129,0.25)]"
                 aria-hidden="true"
               />
-              {copy.ui.liveStatus}
+              Live status
             </span>
+            <span className="text-muted" title="Geschat op basis van laatste scan">Op basis van laatste scan</span>
           </div>
           <TraceProgress current={activeBag.currentStatus} steps={localizedSteps} />
         </SummaryCard>
       </div>
 
-      <div className="sm:hidden fixed bottom-4 right-4 z-20">
-        <button
-          type="button"
-          onClick={scrollToTrack}
-          className="rounded-full bg-accent text-white font-semibold px-5 py-3 shadow-md shadow-orange-200/70 hover:-translate-y-0.5 active:translate-y-0 transition-transform"
-        >
-          {copy.ui.stickyTrack}
-        </button>
-      </div>
+      <section className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white/80 p-5 space-y-3 glow-card text-center sm:text-left">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-[0.3em] text-center">
+          {copy.route.heading}
+        </h2>
+        <ol className="space-y-2">
+          {localizedSteps.map((step) => {
+            const state = getState(step.id, activeBag.currentStatus);
+            const historyItem = activeBag.history.find((h) => h.status === step.id);
+            const isOpen = expandedStep === step.id;
+            const info = copy.stepDescriptions[step.id];
+            const detail = historyItem
+              ? `${info.title}: ${info.body}`
+              : state === "active"
+                ? `${info.title}: ${copy.route.detailActive}`
+                : `${info.title}: ${copy.route.detailUpcoming}`;
+            const stateLabel = historyItem
+              ? historyItem.time
+              : state === "active"
+                ? copy.route.shortActive
+                : copy.route.shortUpcoming;
+            return (
+              <li key={step.id} className="rounded-2xl border border-slate-200 transition-colors hover:border-slate-300 hover:bg-slate-50">
+                <button
+                  type="button"
+                  className="flex flex-col gap-2 sm:flex-row sm:items-center w-full justify-between px-4 py-3 text-center sm:text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400"
+                  onClick={() => setExpandedStep((prev) => (prev === step.id ? null : step.id))}
+                >
+                  <span className="font-semibold text-slate-900">{statusLabels[step.id]}</span>
+                  <span className="flex items-center justify-center gap-2 text-muted">
+                    {stateLabel}
+                    <span className={`transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}>&rsaquo;</span>
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="border-t border-slate-100 px-4 py-3 text-sm text-muted text-left sm:text-base">
+                    {detail}
+                    {historyItem && (
+                      <div className="mt-1 text-xs text-slate-500">
+                        {copy.route.lastScanPrefix} {historyItem.time}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </section>
 
       <footer className="w-full max-w-3xl text-center text-sm text-muted space-y-2">
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <a href="/operator" className="text-accent font-semibold hover:underline">{copy.ui.operatorLink}</a>
+          <a href="/operator" className="text-accent font-semibold hover:underline">Operator</a>
           <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-          <a href="#bagInput" className="hover:underline">{copy.ui.trackLink}</a>
+          <a href="#bagInput" className="hover:underline">Track</a>
           <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-          <a href="mailto:ops@vanderlande.com" className="hover:underline">{copy.ui.supportLink}</a>
-          <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-          <a href="mailto:chat@vanderlande.com" className="hover:underline">{copy.ui.liveChatLink}</a>
+          <a href="mailto:ops@vanderlande.com" className="hover:underline">Support</a>
         </div>
-        <p className="text-xs">{copy.ui.footerNote}</p>
+        <p className="text-xs">Responsief ontworpen voor mobiel en desktop.</p>
       </footer>
-
-      <div aria-live="polite" role="status" className="fixed right-4 top-4 z-30 hidden sm:block">
-        {toast && (
-          <div className="rounded-2xl border border-slate-200 bg-white/95 shadow-lg shadow-slate-200/70 px-4 py-3 text-sm text-slate-900">
-            {toast}
-          </div>
-        )}
-      </div>
-      <div aria-live="polite" role="status" className="fixed left-4 right-4 bottom-4 z-30 sm:hidden">
-        {toast && (
-          <div className="rounded-2xl border border-slate-200 bg-white/95 shadow-lg shadow-slate-200/70 px-4 py-3 text-sm text-slate-900">
-            {toast}
-          </div>
-        )}
-      </div>
     </main>
   );
 }

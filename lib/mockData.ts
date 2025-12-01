@@ -109,3 +109,47 @@ export const mockHubLoad = [
   { hub: "RTM", inbound: 74, outbound: 69 },
   { hub: "EIN", inbound: 58, outbound: 64 },
 ];
+
+export const mockFlights = ["HV123", "KL987", "HV555"];
+
+export const mockIncidentSeries = [
+  { label: "ma", value: 6 },
+  { label: "di", value: 4 },
+  { label: "wo", value: 5 },
+  { label: "do", value: 3 },
+  { label: "vr", value: 4 },
+  { label: "za", value: 2 },
+  { label: "zo", value: 3 },
+];
+
+export const mockHourlyLoad = [
+  { hour: "06:00", load: 0.54, exceptions: 1 },
+  { hour: "08:00", load: 0.68, exceptions: 2 },
+  { hour: "10:00", load: 0.81, exceptions: 3 },
+  { hour: "12:00", load: 0.77, exceptions: 2 },
+  { hour: "14:00", load: 0.63, exceptions: 1 },
+  { hour: "16:00", load: 0.71, exceptions: 2 },
+  { hour: "18:00", load: 0.52, exceptions: 1 },
+  { hour: "20:00", load: 0.45, exceptions: 0 },
+];
+
+export const mockFinanceSummary = {
+  incidents: 42,
+  avoidedIncidents: 18,
+  handledCases: 320,
+  deflectedCalls: 260,
+  avoidedPenalties: 4,
+  totalOpsCost: 120_000,
+  totalBagsProcessed: 8_600,
+  incidentCost: 6_300,
+  avoidedIncidentCost: 2_700,
+  timeSavedHours: 533.33,
+  fteSaved: 0.31,
+  laborSavings: 22_386,
+  callDeflectionSavings: 1_560,
+  slaPenaltyAvoided: 3_200,
+  costPerBag: 13.95,
+  totalSavings: 34_546,
+  roiPercent: 19.12,
+  paybackMonths: 6.67,
+};

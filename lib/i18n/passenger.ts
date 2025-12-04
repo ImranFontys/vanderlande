@@ -20,6 +20,8 @@ export type PassengerTranslation = {
     stickyTrack: string;
     stickyStatus: string;
     liveStatus: string;
+    lastScanNote: string;
+    lastScanTitle: string;
     footerNote: string;
     operatorLink: string;
     trackLink: string;
@@ -86,6 +88,8 @@ const translations: Record<Language, PassengerTranslation> = {
       stickyTrack: "Track bag",
       stickyStatus: "Status",
       liveStatus: "Live status",
+      lastScanNote: "Op basis van laatste scan",
+      lastScanTitle: "Geschat op basis van laatste scan",
       footerNote: "Responsief ontworpen voor mobiel en desktop. Kies taal bovenin.",
       operatorLink: "Operator",
       trackLink: "Track",
@@ -193,6 +197,8 @@ const translations: Record<Language, PassengerTranslation> = {
       stickyTrack: "Track bag",
       stickyStatus: "Status",
       liveStatus: "Live status",
+      lastScanNote: "Based on last scan",
+      lastScanTitle: "Estimated from last scan",
       footerNote: "Responsive for mobile and desktop. Choose language above.",
       operatorLink: "Operator",
       trackLink: "Track",

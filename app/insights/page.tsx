@@ -41,13 +41,49 @@ export default function InsightsPage() {
   const [flight, setFlight] = useState<string>("all");
   const [hub, setHub] = useState<string>("all");
 
+  const incidentsPerDay = useMemo(
+    () => Math.round(mockIncidentSeries.reduce((sum, row) => sum + row.value, 0) / mockIncidentSeries.length),
+    []
+  );
+
   const kpiTiles = useMemo(
     () => [
-      { label: "Gem. doorlooptijd", value: `${mockKpis.avgTime} min`, tone: "bg-slate-900 text-white" },
-      { label: "Koffers zonder afwijking", value: percentFormat(mockKpis.ontime), tone: "bg-emerald-50 text-emerald-800 border-emerald-200" },
-      { label: "Afwijkingen (week)", value: numberFormat(mockKpis.exceptions), tone: "bg-amber-50 text-amber-900 border-amber-200" },
-      { label: "Uptime", value: percentFormat(mockKpis.uptime), tone: "bg-blue-50 text-blue-900 border-blue-200" },
-      { label: "Doorstroom-efficiëntie", value: `${Math.round(mockKpis.arrivals / 4)} p/u`, tone: "bg-slate-50 text-slate-900 border-slate-200" },
+      {
+        label: "Koffers op tijd",
+        value: percentFormat(mockKpis.ontime),
+        helper: "Laatste 7 dagen",
+        tone: "bg-emerald-50 text-emerald-800 border-emerald-200",
+      },
+      {
+        label: "Gem. doorlooptijd",
+        value: `${mockKpis.avgTime} min`,
+        helper: "Check-in → band",
+        tone: "bg-slate-900 text-white",
+      },
+      {
+        label: "Open uitzonderingen",
+        value: numberFormat(mockKpis.exceptions),
+        helper: "Direct oppakken",
+        tone: "bg-amber-50 text-amber-900 border-amber-200",
+      },
+      {
+        label: "Beschikbaarheid sorteer",
+        value: percentFormat(mockKpis.uptime),
+        helper: "Systeem-uptime",
+        tone: "bg-blue-50 text-blue-900 border-blue-200",
+      },
+      {
+        label: "Bags verwerkt (24u)",
+        value: numberFormat(mockKpis.arrivals),
+        helper: "Afgehandeld afgelopen dag",
+        tone: "bg-white text-slate-900 border-slate-200",
+      },
+      {
+        label: "Doorvoer (p/u)",
+        value: `${Math.round(mockKpis.arrivals / 4)} p/u`,
+        helper: "Gemiddelde van live meetpunt",
+        tone: "bg-slate-50 text-slate-900 border-slate-200",
+      },
     ],
     []
   );
@@ -75,14 +111,37 @@ export default function InsightsPage() {
     []
   );
 
+  const kpiFramework = useMemo(
+    () => ({
+      operational: [
+        { label: "Doorlooptijd per koffer", value: `${mockKpis.avgTime} min`, helper: "Check-in → band" },
+        { label: "Incidenten per dag", value: `${incidentsPerDay} / dag`, helper: "Gem. laatste 7 dagen" },
+        { label: "Oplostijd incidenten", value: "18 min", helper: "Gemiddeld oppakken en oplossen" },
+        { label: "Realtime gevolgd", value: "96%", helper: "Labels met live updates" },
+      ],
+      customer: [
+        { label: "Klantvragen over bagage", value: "48 / dag", helper: "Contactmomenten over status" },
+        { label: "Tevredenheid info", value: "4.6 / 5", helper: "Score op duidelijkheid updates" },
+      ],
+      technical: [
+        { label: "Uptime", value: percentFormat(mockKpis.uptime), helper: "Beschikbaarheid sorteer & data" },
+        { label: "Foutpercentage datastromen", value: "0,3%", helper: "Mismatch of ontbrekende scans" },
+        { label: "Dataverwerking", value: "320 ms", helper: "Gemiddelde latency ingest → dashboard" },
+      ],
+    }),
+    [incidentsPerDay]
+  );
+
   return (
     <main className="page px-4 py-12 max-w-7xl mx-auto space-y-10">
       <header className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="eyebrow">Business Insights</p>
-            <h1 className="text-4xl font-semibold text-slate-900">Operational & financiële KPI&apos;s</h1>
-            <p className="text-muted text-sm">Filter op periode, vlucht en hub om trends te zien.</p>
+            <p className="eyebrow">Insights</p>
+            <h1 className="text-4xl font-semibold text-slate-900">Operations & service in één oogopslag</h1>
+            <p className="text-muted text-sm">
+              Duidelijke KPI&apos;s: op tijd, doorlooptijd, uitzonderingen en financiële impact. Filter om te verdiepen.
+            </p>
           </div>
           <div className="flex gap-2">
             <a href="/" className="ghost-btn">Passagier</a>
@@ -130,8 +189,63 @@ export default function InsightsPage() {
               ))}
             </select>
           </label>
+          <span className="text-xs text-muted">Demo-data · visuele trends voor uitleg</span>
         </div>
       </header>
+
+      <section className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-soft space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="eyebrow">KPI-set</p>
+            <h2 className="text-2xl font-semibold text-slate-900">Effectiviteit meten</h2>
+            <p className="text-sm text-muted">Operationeel, klantgericht en technisch — in één overzicht.</p>
+          </div>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-3">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">Operationeel</p>
+            <ul className="space-y-2 text-sm">
+              {kpiFramework.operational.map((item) => (
+                <li key={item.label} className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{item.label}</p>
+                    <p className="text-xs text-muted">{item.helper}</p>
+                  </div>
+                  <span className="font-semibold text-slate-900 whitespace-nowrap">{item.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">Klantgericht</p>
+            <ul className="space-y-2 text-sm">
+              {kpiFramework.customer.map((item) => (
+                <li key={item.label} className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{item.label}</p>
+                    <p className="text-xs text-muted">{item.helper}</p>
+                  </div>
+                  <span className="font-semibold text-slate-900 whitespace-nowrap">{item.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">Technisch</p>
+            <ul className="space-y-2 text-sm">
+              {kpiFramework.technical.map((item) => (
+                <li key={item.label} className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{item.label}</p>
+                    <p className="text-xs text-muted">{item.helper}</p>
+                  </div>
+                  <span className="font-semibold text-slate-900 whitespace-nowrap">{item.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {kpiTiles.map((tile) => (
@@ -141,6 +255,7 @@ export default function InsightsPage() {
           >
             <p className="text-xs uppercase tracking-[0.2em] text-muted">{tile.label}</p>
             <p className="text-2xl font-semibold mt-2">{tile.value}</p>
+            {tile.helper && <p className="text-xs text-muted mt-1">{tile.helper}</p>}
           </div>
         ))}
       </section>
@@ -148,7 +263,7 @@ export default function InsightsPage() {
       <section className="grid gap-4 lg:grid-cols-[2fr,1fr] items-start">
         <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-soft">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-slate-900">Doorlooptijd trend</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Doorstroom per uur vs target</h2>
             <span className="pill pill-green">Live</span>
           </div>
           <div className="h-72">
@@ -164,9 +279,10 @@ export default function InsightsPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-xs text-muted mt-2">Kijk of de live doorvoer de target (grijs) haalt en piekmomenten zichtbaar zijn.</p>
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-soft">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Incident per type</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">Top redenen voor uitzonderingen</h2>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mockExceptionBreakdown}>
@@ -178,12 +294,13 @@ export default function InsightsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-xs text-muted mt-2">Focus op de grootste oorzaken om wachttijd en klantimpact te verlagen.</p>
         </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.4fr,1fr] items-start">
         <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-soft">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Afwijkingen per dag</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">Exceptions per dag (laatste week)</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mockIncidentSeries}>
@@ -195,9 +312,10 @@ export default function InsightsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-xs text-muted mt-2">Trend per dag helpt pieken in bemensing of herconfiguratie te plannen.</p>
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-soft">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Belasting per hub</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">In- en outbound per hub</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={filteredHubLoad} layout="vertical" margin={{ left: 20 }}>
@@ -211,24 +329,38 @@ export default function InsightsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          <p className="text-xs text-muted mt-2">Vergelijk hubs om capaciteit te sturen of rotaties te plannen.</p>
         </div>
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-soft space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Financiële KPI&apos;s</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Financiële impact (model)</h2>
           <span className="pill pill-orange">Demo-data</span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {financeTiles.map((tile) => (
-            <div
-              key={tile.label}
-              className={`rounded-3xl border p-4 shadow-soft ${tile.tone}`}
-            >
-              <p className="text-xs uppercase tracking-[0.2em] text-muted">{tile.label}</p>
-              <p className="text-xl font-semibold mt-2">{tile.value}</p>
-            </div>
-          ))}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            financeTiles.find((t) => t.label === "Totale besparing"),
+            financeTiles.find((t) => t.label === "Cost per bag"),
+            financeTiles.find((t) => t.label === "ROI"),
+            financeTiles.find((t) => t.label === "Payback"),
+          ]
+            .filter(Boolean)
+            .map((tile) => (
+              <div
+                key={tile!.label}
+                className={`rounded-3xl border p-4 shadow-soft ${tile!.tone}`}
+              >
+                <p className="text-xs uppercase tracking-[0.2em] text-muted">{tile!.label}</p>
+                <p className="text-xl font-semibold mt-1">{tile!.value}</p>
+                <p className="text-xs text-muted mt-1">
+                  {tile!.label === "Totale besparing" && "Som van arbeid, calls en penalties."}
+                  {tile!.label === "Cost per bag" && "Gemiddelde kosten voor verwerking."}
+                  {tile!.label === "ROI" && "Op basis van projectkosten."}
+                  {tile!.label === "Payback" && "Maanden tot terugverdiend."}
+                </p>
+              </div>
+            ))}
         </div>
       </section>
 

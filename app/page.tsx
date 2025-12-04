@@ -7,6 +7,7 @@ import { useEta } from "@/hooks/useEta";
 import { getPassengerCopy, type FormError, type Language } from "@/lib/i18n/passenger";
 import { mockTrace, statusSteps } from "@/lib/mockData";
 import { buildTraceRecord, getState, sanitizeId } from "@/lib/utils";
+import Image from "next/image";
 import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 type TraceRecord = (typeof mockTrace)[keyof typeof mockTrace];
@@ -136,11 +137,13 @@ export default function PassengerPage() {
       </div>
       <div className="w-full flex justify-center">
         <div className="rounded-full bg-white/80 backdrop-blur px-4 py-3 shadow-md shadow-orange-200/60 border border-slate-100">
-          <img
+          <Image
             src="/vanderlande-logo.png"
             alt="Vanderlande logo"
             className="h-16 w-auto sm:h-20 md:h-24 drop-shadow-sm"
-            loading="eager"
+            width={240}
+            height={96}
+            priority
           />
         </div>
       </div>
@@ -165,7 +168,7 @@ export default function PassengerPage() {
             <label htmlFor="bagInput" className="text-sm font-semibold text-muted text-center">
               {copy.form.label}
             </label>
-            <p className="text-xs text-muted text-center">Druk op Enter om direct te zoeken.</p>
+            <p className="text-xs text-muted text-center">{copy.ui.enterHint}</p>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <input
                 ref={inputRef}
@@ -224,9 +227,11 @@ export default function PassengerPage() {
                 className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_0_6px_rgba(16,185,129,0.25)]"
                 aria-hidden="true"
               />
-              Live status
+              {copy.ui.liveStatus}
             </span>
-            <span className="text-muted" title="Geschat op basis van laatste scan">Op basis van laatste scan</span>
+            <span className="text-muted" title={copy.ui.lastScanTitle}>
+              {copy.ui.lastScanNote}
+            </span>
           </div>
           <TraceProgress current={activeBag.currentStatus} steps={localizedSteps} />
         </SummaryCard>
@@ -283,13 +288,19 @@ export default function PassengerPage() {
 
       <footer className="w-full max-w-3xl text-center text-sm text-muted space-y-2">
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <a href="/operator" className="text-accent font-semibold hover:underline">Operator</a>
+          <a href="/operator" className="text-accent font-semibold hover:underline">
+            {copy.ui.operatorLink}
+          </a>
           <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-          <a href="#bagInput" className="hover:underline">Track</a>
+          <a href="#bagInput" className="hover:underline">
+            {copy.ui.trackLink}
+          </a>
           <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-          <a href="mailto:ops@vanderlande.com" className="hover:underline">Support</a>
+          <a href="mailto:ops@vanderlande.com" className="hover:underline">
+            {copy.ui.supportLink}
+          </a>
         </div>
-        <p className="text-xs">Responsief ontworpen voor mobiel en desktop.</p>
+        <p className="text-xs">{copy.ui.footerNote}</p>
       </footer>
     </main>
   );

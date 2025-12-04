@@ -59,12 +59,91 @@ export const mockKpis = {
 };
 
 export const mockShipments = [
-  { id: "bag001", status: "intransit", eta: "10:15", hub: "AMS", label: "Geladen" },
-  { id: "bag002", status: "arrived", eta: "09:40", hub: "AMS", label: "Op band" },
-  { id: "bag003", status: "exception", eta: "11:20", hub: "RTM", label: "Sorteer" },
-  { id: "bag004", status: "arrived", eta: "11:32", hub: "EIN", label: "Afgehaald" },
-  { id: "bag005", status: "intransit", eta: "12:05", hub: "AMS", label: "Onderweg" },
+  {
+    id: "bag001",
+    status: "intransit",
+    eta: "10:15",
+    hub: "AMS",
+    label: "Geladen",
+    flight: "HV123",
+    belt: "B05",
+    sorter: "Noord",
+    position: "Lane 2 · scanner 14",
+    incident: null,
+    lastUpdateMinutes: 8,
+  },
+  {
+    id: "bag002",
+    status: "arrived",
+    eta: "09:40",
+    hub: "AMS",
+    label: "Op band",
+    flight: "KL987",
+    belt: "B08",
+    sorter: "Band 8",
+    position: "Band 8 · 32m",
+    incident: null,
+    lastUpdateMinutes: 4,
+  },
+  {
+    id: "bag003",
+    status: "exception",
+    eta: "11:20",
+    hub: "RTM",
+    label: "Sorteer",
+    flight: "HV555",
+    belt: "B03",
+    sorter: "West",
+    position: "Chute 4 · label mismatch",
+    incident: "Label mismatch",
+    lastUpdateMinutes: 12,
+  },
+  {
+    id: "bag004",
+    status: "arrived",
+    eta: "11:32",
+    hub: "EIN",
+    label: "Afgehaald",
+    flight: "HV123",
+    belt: "B02",
+    sorter: "Band 2",
+    position: "Band 2 · 6m",
+    incident: null,
+    lastUpdateMinutes: 2,
+  },
+  {
+    id: "bag005",
+    status: "intransit",
+    eta: "12:05",
+    hub: "AMS",
+    label: "Onderweg",
+    flight: "KL987",
+    belt: "B07",
+    sorter: "Noord",
+    position: "Lane 1 · camera 3",
+    incident: null,
+    lastUpdateMinutes: 22,
+  },
 ];
+
+export const mockSorters = [
+  { name: "Sorter Noord", utilization: 0.82, state: "warning", alerts: 2, belt: "Lane 2", detail: "Label leesproblemen" },
+  { name: "Sorter West", utilization: 0.64, state: "stable", alerts: 0, belt: "Chute 4", detail: "Flow normaal" },
+  { name: "Band 8", utilization: 0.55, state: "stable", alerts: 0, belt: "Gate D", detail: "Aankomst binnen" },
+] as const;
+
+export const mockBelts = [
+  { belt: "Band 2", flight: "KL987", gate: "D2", load: 0.64, status: "running", bags: 36 },
+  { belt: "Band 5", flight: "HV123", gate: "E5", load: 0.78, status: "holding", bags: 42 },
+  { belt: "Band 7", flight: "HV555", gate: "B7", load: 0.32, status: "running", bags: 18 },
+  { belt: "Band 8", flight: "KL987", gate: "C1", load: 0.9, status: "jam", bags: 54 },
+] as const;
+
+export const mockAlerts = [
+  { id: "AL-204", severity: "critical", title: "JAM · lane 2", detail: "Sorter Noord · chute geblokkeerd", time: "1m" },
+  { id: "AL-198", severity: "warning", title: "Scanner drift", detail: "Band 5 · camera 3 uitlijning", time: "4m" },
+  { id: "AL-186", severity: "info", title: "Preventief onderhoud", detail: "Band 8 · service in 30 min", time: "30m" },
+] as const;
 
 export const mockTrend = [40, 52, 48, 60, 70, 68, 82];
 

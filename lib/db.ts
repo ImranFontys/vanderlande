@@ -1,4 +1,4 @@
-import { Pool, type PoolClient } from "pg";
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
 import { env } from "./env";
 
 type DbRole = "ro" | "rw" | "admin";
@@ -35,7 +35,11 @@ export function getPool(role: DbRole = "rw") {
   return pools[role] as Pool;
 }
 
-export async function query<T = unknown>(text: string, params: unknown[] = [], role: DbRole = "rw") {
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params: unknown[] = [],
+  role: DbRole = "rw"
+) {
   const pool = getPool(role);
   const result = await pool.query<T>(text, params);
   return result.rows;

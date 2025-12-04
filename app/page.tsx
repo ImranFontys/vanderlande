@@ -6,11 +6,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useEta } from "@/hooks/useEta";
 import { getPassengerCopy, type FormError, type Language } from "@/lib/i18n/passenger";
 import { mockTrace, statusSteps } from "@/lib/mockData";
-import { buildTraceRecord, getState, sanitizeId } from "@/lib/utils";
+import { buildTraceRecord, getState, sanitizeId, type TraceRecord } from "@/lib/utils";
 import Image from "next/image";
 import { useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-
-type TraceRecord = (typeof mockTrace)[keyof typeof mockTrace];
 
 const STEP_ETA_MAP: Record<number, number> = {
   1: 35,
